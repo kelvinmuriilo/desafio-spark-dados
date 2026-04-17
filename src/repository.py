@@ -1,13 +1,13 @@
 """Funções de acesso aos arquivos de entrada do desafio."""
 
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType, StructField, LongType, DoubleType, StringType
+from pyspark.sql.types import StructType, StructField, LongType, DecimalType, StringType
 from config import BASE_DIR
 
 # Schema esperado para a base de pedidos.
 order_schema = StructType([
     StructField("id", LongType(), False),
-    StructField("value", DoubleType(), False),
+    StructField("value", DecimalType(5, 2), False),
     StructField("client_id", LongType(), False)
 ])
 

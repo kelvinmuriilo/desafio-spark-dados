@@ -6,10 +6,10 @@ import sys
 import pytest
 
 
-# Garante que os módulos da pasta `code` possam ser importados nos testes.
-CODE_DIR = Path(__file__).resolve().parents[1] / "code"
-if str(CODE_DIR) not in sys.path:
-    sys.path.insert(0, str(CODE_DIR))
+# Garante que os módulos da pasta `src` possam ser importados nos testes.
+SRC_DIR = Path(__file__).resolve().parents[1] / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 
 @pytest.fixture(scope="session")
