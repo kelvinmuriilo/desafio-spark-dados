@@ -27,6 +27,7 @@ def build_quality_report(
     """Monta o dataframe consolidado com todos os problemas de qualidade."""
     quality_checks = [
         (_get_invalid_order_value(df_orders), "Preço inválido (menor que 0)"),
+        (_get_null_order_value(df_orders), "Valor do pedido nulo"),
         (_get_null_order_id(df_orders), "ID do pedido nulo"),
         (_get_null_client_id(df_orders), "ID do cliente nulo"),
         (_get_orders_with_invalid_client_fk(df_orders, df_clients), "Cliente não encontrado"),
@@ -52,6 +53,15 @@ def _get_invalid_order_value(data_frame: DataFrame) -> DataFrame:
     """Retorna pedidos com valor negativo."""
     invalid_prices = data_frame.filter((data_frame.value < 0))
     return invalid_prices.select("id")
+
+
+def _get_null_order_value(data_frame: DataFrame) -> DataFrame:
+    """Retorna pedidos cujo valor está nulo."""
+    return (
+        data_frame
+        .filter(data_frame.value.isNull())
+        .select("id")
+    )
 
 def _get_null_order_id(data_frame: DataFrame) -> DataFrame:
     """Retorna pedidos cujo identificador está nulo."""

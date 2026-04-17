@@ -71,11 +71,12 @@ root
 
 O relatório de qualidade marca pedidos com:
 
-- valor negativo
-- `id` nulo
+- valor do pedido negativo
+- valor do pedido nulo
+- `id` do pedido nulo
 - `client_id` nulo
 - `client_id` inexistente na base de clientes
-- mesmo `id` vinculado a múltiplos clientes
+- mesmo `id` de pedido vinculado a múltiplos clientes
 - `id` duplicado
 
 O dataframe de qualidade contém:
