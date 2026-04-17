@@ -1,14 +1,23 @@
 """Testes das regras de qualidade de dados."""
 
+from contextlib import redirect_stdout
 from decimal import Decimal
+from io import StringIO
+from pathlib import Path
+import sys
 
 import pytest
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT_DIR / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 pytest.importorskip("pyspark.sql")
 
 from pyspark.sql import functions as F
 
-from quality import build_quality_report, get_invalid_order_ids
+from quality import build_quality_report, get_invalid_order_ids, run_data_quality
 
 
 def test_build_quality_report_returns_ids_with_reasons(spark):
@@ -92,3 +101,22 @@ def test_get_invalid_order_ids_flags_orders_with_unknown_client_fk(spark):
 
     invalid_ids = {row["id"] for row in result.collect()}
     assert invalid_ids == {2}
+
+
+def test_run_data_quality_prints_summary_with_quantidade_column(spark):
+    """Garante que o resumo de qualidade exiba a coluna Quantidade."""
+    df_quality_report = spark.createDataFrame(
+        [
+            (1, "Preço inválido (menor que 0)"),
+            (2, "Cliente não encontrado"),
+        ],
+        ["id", "motivo"],
+    )
+
+    buffer = StringIO()
+    with redirect_stdout(buffer):
+        run_data_quality(df_quality_report)
+
+    output = buffer.getvalue()
+    assert "Problemas de qualidade encontrados:" in output
+    assert "Quantidade" in output

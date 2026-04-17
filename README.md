@@ -1,235 +1,154 @@
 # Teste Técnico - Engenheiro de Dados PySpark
 
-## 📋 Contexto do Projeto
+## Contexto
 
-Este é um desafio técnico que simula um cenário real de análise de dados de um e-commerce. O projeto utiliza **Apache Spark** para processar dois conjuntos de dados principais:
+Este projeto resolve um desafio técnico de engenharia de dados com PySpark sobre uma base de clientes e pedidos de um e-commerce.
 
-- **Clientes**: ~10 mil registros de clientes do sistema
-- **Pedidos**: ~1 milhão de registros de pedidos realizados
+O pipeline faz:
 
-O objetivo é realizar análises de qualidade de dados, agregações, cálculos estatísticos e filtragens para entender o comportamento de compra dos clientes.
+1. leitura das bases JSON com schema explícito
+2. validação de qualidade dos pedidos
+3. exclusão dos pedidos inválidos da base analítica
+4. agregação por cliente
+5. cálculo de estatísticas sobre o valor total por cliente
+6. filtragens pedidas no enunciado
 
-### Requisitos Técnicos
+## Estrutura do projeto
 
-1. **Data Quality**: Identificar e reportar pedidos com problemas de qualidade
-2. **Agregação**: Computar métricas por cliente (quantidade de pedidos, valor total)
-3. **Análise Estatística**: Calcular média, mediana, percentis 10 e 90
-4. **Filtragem - Acima da Média**: Listar clientes com valor total acima da média
-5. **Filtragem - Média Truncada**: Listar clientes entre os percentis 10 e 90
-
----
-
-## 📁 Organização das Pastas
-
-```
-test-tecnico-engenheiro-dados/
-├── code/                          # Código-fonte principal
-│   ├── config.py                 # Configurações compartilhadas
-│   ├── main.py                   # Script de execução principal
-│   ├── quality.py                # Regras de qualidade de dados
-│   ├── repository.py             # Acesso aos dados (clientes e pedidos)
-│   └── spark-warehouse/          # Diretório para metadados do Spark (local)
-│
-├── data/                          # Dados de entrada
+```text
+desafio-spark/
+├── data/
 │   ├── clients/
-│   │   └── data.json            # Base de clientes (~10k registros)
+│   │   └── data.json
 │   └── pedidos/
-│       └── data.json            # Base de pedidos (~1M registros)
-│
+│       └── data.json
 ├── instruções/
-│   └── candidato.md             # Descrição do desafio e requisitos
-│
-└── tests/                         # Testes unitários
-    ├── conftest.py              # Configurações e fixtures do pytest
-    ├── test_config.py           # Testes do módulo config
-    ├── test_main.py             # Smoke test do script principal
-    ├── test_quality.py          # Testes das regras de qualidade
-    └── test_repository.py       # Testes do módulo de acesso aos dados
+│   └── candidato.md
+├── src/
+│   ├── config.py
+│   ├── main.py
+│   ├── quality.py
+│   └── repository.py
+└── tests/
+    ├── conftest.py
+    ├── test_config.py
+    ├── test_main.py
+    ├── test_quality.py
+    └── test_repository.py
 ```
 
-### Descrição dos Módulos
+## Módulos
 
-| Módulo | Responsabilidade |
-|--------|-----------------|
-| `config.py` | Define o diretório base para resolver paths dos arquivos de entrada |
-| `repository.py` | Carrega dados de clientes e pedidos com schemas explícitos |
-| `quality.py` | Implementa regras de qualidade e gera relatórios de problemas |
-| `main.py` | Orquestra a execução completa da análise |
+- `src/config.py`: define `BASE_DIR` para resolver os caminhos do projeto.
+- `src/repository.py`: lê clientes e pedidos com schema explícito.
+- `src/quality.py`: monta o relatório consolidado de qualidade e extrai os IDs inválidos.
+- `src/main.py`: orquestra a execução completa do pipeline e imprime os dataframes/resultados.
 
----
+## Dados de entrada
 
-## 🧪 Cobertura de Testes
+### Clientes
 
-O projeto inclui uma suíte de testes com **pytest** e**PySpark** para validar a lógica de processamento:
+Schema:
 
-### Testes Implementados
+```text
+root
+ |-- id: long (nullable = false)
+ |-- name: string (nullable = false)
+```
 
-| Arquivo | Descrição | Casos de Teste |
-|---------|-----------|-----------------|
-| `test_quality.py` | Valida a consolidação de IDs inválidos | 2 testes |
-| `test_main.py` | Smoke test da execução principal | 1 teste |
-| `conftest.py` | Fixtures compartilhadas | SparkSession local |
+### Pedidos
 
-### Exemplos de Testes
+Schema:
 
-1. **`test_get_invalid_order_ids_returns_union_of_quality_failures`**
-   - Verifica se todos os IDs inválidos são consolidados
-   - Testa detecção de: valores negativos,IDs nulos, clientes nulos, duplicatas
+```text
+root
+ |-- id: long (nullable = false)
+ |-- value: decimal(5,2) (nullable = false)
+ |-- client_id: long (nullable = false)
+```
 
-2. **`test_get_invalid_order_ids_deduplicates_repeated_failures`**
-   - Garante que IDs inválidos apareçam apenas uma vez
+## Regras de qualidade implementadas
 
-3. **`test_main_executes_without_errors`**
-   - Smoke test: valida se o script principal executa sem exceções
+O relatório de qualidade marca pedidos com:
 
-### Executar Testes
+- valor negativo
+- `id` nulo
+- `client_id` nulo
+- `client_id` inexistente na base de clientes
+- mesmo `id` vinculado a múltiplos clientes
+- `id` duplicado
+
+O dataframe de qualidade contém:
+
+- `id`
+- `motivo`
+
+Além do relatório detalhado, o código também imprime um resumo por motivo com a coluna `Quantidade`.
+
+## Saídas produzidas
+
+O script principal exibe:
+
+1. pedidos com problemas de qualidade
+2. resumo das falhas por motivo
+3. agregação por cliente com:
+   - `client_id`
+   - `nome_cliente`
+   - `quantidade_pedidos`
+   - `valor_total_pedidos`
+4. estatísticas do valor total por cliente:
+   - média aritmética
+   - mediana
+   - percentil 10
+   - percentil 90
+5. clientes com valor total acima da média
+6. clientes com valor total entre os percentis 10 e 90
+
+As saídas com `show()` foram configuradas para exibir até `100` linhas.
+
+## Como executar
+
+Pré-requisitos:
+
+- Python 3.10+
+- instalar as dependências do projeto
+
+Instalação:
 
 ```bash
-# Executar todos os testes
-pytest tests/
+pip install -r requirements.txt
+```
 
-# Executar testes com saída detalhada
+Execução do pipeline:
+
+```bash
+python3 src/main.py
+```
+
+## Testes
+
+A suíte cobre os arquivos Python atuais do projeto:
+
+- `test_config.py`: valida `BASE_DIR`
+- `test_repository.py`: valida leitura, colunas e schemas
+- `test_quality.py`: valida relatório de qualidade e consolidação de IDs inválidos
+- `test_main.py`: smoke test do script principal e validação básica da saída textual
+
+Executar todos os testes:
+
+```bash
 pytest tests/ -v
-
-# Executar testes de um módulo específico
-pytest tests/test_quality.py -v
-
-# Executar testes e mostrar cobertura
-pytest tests/ --cov=code --cov-report=html
 ```
 
----
-
-## 🚀 Como Executar o Código
-
-### Pré-requisitos
-
-- **Python 3.8+**
-- **PySpark 3.x**
-- **Dependências adicionais** (opcionais para desenvolvimento):
-  - `pytest` - para executar testes
-  - `pytest-cov` - para cobertura de testes
-
-### Instalação de Dependências
+Executar com cobertura:
 
 ```bash
-# Instalar PySpark
-pip install pyspark
-
-# Instalar dependências de teste (opcional)
-pip install pytest pytest-cov
+pytest tests/ --cov=src --cov-report=term-missing
 ```
 
-### Executar o Script Principal
+## Observações de implementação
 
-```bash
-# Navegar até o diretório do código
-cd code/
-
-# Executar o script principal
-python main.py
-```
-
-### Fluxo de Execução
-
-O script `main.py` executa as seguintes operações em sequência:
-
-1. **Carrega dados**: Lê clientes e pedidos dos arquivos JSON
-2. **Valida qualidade**: Executa 5 verificações de qualidade:
-   - Preços negativos
-   - IDs de pedido nulos
-   - IDs de cliente nulos
-   - Pedidos vinculados a múltiplos clientes
-   - IDs de pedido duplicados
-3. **Filtra dados válidos**: Remove pedidos inválidos
-4. **Agrega por cliente**: Calcula quantidade e valor total de pedidos
-5. **Calcula estatísticas**: Média, mediana, percentis 10 e 90
-6. **Exibe análises**:
-   - Clientes com valor acima da média
-   - Clientes entre percentis 10 e 90
-
-### Saída Esperada
-
-O script gera as seguintes saídas:
-
-```
-============================================
-
-1. Pedidos com problemas de qualidade
-============================================
-
-[Tabela com ID do pedido e motivo do problema]
-Problemas de qualidade encontrados: 
-
-[Contagem por tipo de problema]
-
-[Tabela com cliente, quantidade de pedidos e valor total]
-Média aritmética do valor total de pedidos por cliente: [valor]
-Mediana do valor total de pedidos por cliente: [valor]
-Percentil 10: [valor]
-Percentil 90: [valor]
-
-Clientes com valor total de pedidos acima da média:
-[Tabela com clientes]
-
-Clientes com valor total de pedidos entre o percentil 10 e 90:
-[Tabela com clientes]
-```
-
----
-
-## 🔍 Regras de Qualidade de Dados
-
-O módulo `quality.py` implementa as seguintes validações:
-
-| Regra | Descrição | Impacto |
-|-------|-----------|--------|
-| **Preço negativo** | `value < 0` | Pedido removido |
-| **ID do pedido nulo** | `id IS NULL` | Pedido removido |
-| **ID do cliente nulo** | `client_id IS NULL` | Pedido removido |
-| **Pedido duplicado** | `id` aparece 2+ vezes | Ambas as ocorrências removidas |
-| **Cliente múltiplo** | Mesmo `id` tem `client_id`s diferentes | Pedido removido |
-
----
-
-## 📊 Estrutura de Dados
-
-### Schema de Clientes
-
-```
-root
- |-- id: long (NOT NULL)
- |-- name: string (NOT NULL)
-```
-
-**Exemplo:**
-```json
-{"id": 1, "name": "João Silva"}
-{"id": 2, "name": "Maria Santos"}
-```
-
-### Schema de Pedidos
-
-```
-root
- |-- id: long (NOT NULL)
- |-- value: double (NOT NULL)
- |-- client_id: long (NOT NULL)
-```
-
-**Exemplo:**
-```json
-{"id": 1, "value": 99.99, "client_id": 1}
-{"id": 2, "value": 150.50, "client_id": 2}
-```
-
----
-
-## 💡 Notas de Implementação
-
-- **Performance**: Utiliza operações nativas do Spark para otimizar o processamento de 1 milhão de registros
-- **Memory**: A sessão Spark é configurada localmente (`local[1]`) por padrão
-- **Logging**: Suprime logs verbosos do Spark para melhor legibilidade da saída
-- **Persistência**: Os resultados são exibidos com `show()`, não persistidos em disco
-
----
+- o total por cliente é convertido para `decimal(11,2)`, como pedido no desafio
+- os pedidos inválidos são removidos antes das agregações
+- o join entre pedidos e clientes usa aliases explícitos para evitar ambiguidade no Spark 4
+- as estatísticas exibidas são materializadas em um dataframe para manter a entrega alinhada ao enunciado
