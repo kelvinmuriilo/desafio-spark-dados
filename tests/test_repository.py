@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("pyspark.sql")
 
-from repository import client_schema, get_clients, get_orders, order_schema
+from code.repository import client_schema, get_clients, get_orders, order_schema
 
 
 def test_get_orders_uses_expected_schema_and_loads_data(spark):

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from config import BASE_DIR
+from code.config import BASE_DIR
 
 
 def test_base_dir_points_to_project_root():

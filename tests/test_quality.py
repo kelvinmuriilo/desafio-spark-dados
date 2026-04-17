@@ -6,7 +6,7 @@ pytest.importorskip("pyspark.sql")
 
 from pyspark.sql import functions as F
 
-from quality import get_invalid_order_ids
+from code.quality import get_invalid_order_ids
 
 
 def test_get_invalid_order_ids_returns_union_of_quality_failures(spark):
