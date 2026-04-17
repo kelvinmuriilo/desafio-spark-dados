@@ -77,7 +77,7 @@ O relatório de qualidade marca pedidos com:
 - `client_id` nulo
 - `client_id` inexistente na base de clientes
 - mesmo `id` de pedido vinculado a múltiplos clientes
-- `id` duplicado
+- `id` do pedido duplicado
 
 O dataframe de qualidade contém:
 
