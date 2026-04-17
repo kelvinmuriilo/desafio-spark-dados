@@ -114,7 +114,6 @@ print("\n================================================================\n")
 print("4. Análise dos clientes com valor total de pedidos acima da média")
 print("=================================================================\n")
 # Lista os clientes cujo total de pedidos está acima da média aritmética.
-print("Clientes com valor total de pedidos acima da média:")
 df_clients_above_average = df_client_totals.filter(F.col("valor_total_pedidos") > average_value) \
     .orderBy(F.col("valor_total_pedidos").desc()) \
     .select(
@@ -129,7 +128,6 @@ print("\n=======================================================================
 print("5. Análise dos clientes com valor total de pedidos entre os percentis 10 e 90")
 print("================================================================================\n")
 # Lista os clientes dentro do intervalo entre os percentis 10 e 90.
-print(f"Clientes com valor total de pedidos entre o percentil 10 ({percentil_10}) e o percentil 90 ({percentil_90}):")
 df_clients_between_percentiles = df_client_totals.filter(
     (F.col("valor_total_pedidos") >= percentil_10) & (F.col("valor_total_pedidos") <= percentil_90)
 ).orderBy(F.col("valor_total_pedidos").desc())
